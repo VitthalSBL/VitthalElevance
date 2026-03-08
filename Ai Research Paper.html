@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArXiv AI Research Assistant</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI;
+}
+
+body{
+background:#0f172a;
+color:white;
+display:flex;
+height:100vh;
+overflow:hidden;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:260px;
+background:#020617;
+padding:20px;
+display:flex;
+flex-direction:column;
+border-right:1px solid #1e293b;
+}
+
+.logo{
+font-size:22px;
+font-weight:bold;
+margin-bottom:25px;
+}
+
+.search{
+padding:10px;
+border-radius:8px;
+border:none;
+background:#1e293b;
+color:white;
+margin-bottom:20px;
+}
+
+.paper-list{
+flex:1;
+overflow:auto;
+}
+
+.paper{
+padding:12px;
+background:#1e293b;
+border-radius:8px;
+margin-bottom:10px;
+cursor:pointer;
+transition:.2s;
+}
+
+.paper:hover{
+background:#334155;
+}
+
+/* MAIN */
+
+.main{
+flex:1;
+display:flex;
+flex-direction:column;
+}
+
+/* HEADER */
+
+.header{
+padding:15px;
+border-bottom:1px solid #1e293b;
+display:flex;
+justify-content:space-between;
+}
+
+.mode{
+background:#1e293b;
+padding:6px 14px;
+border-radius:8px;
+cursor:pointer;
+}
+
+/* CHAT AREA */
+
+.chat{
+flex:1;
+padding:20px;
+overflow:auto;
+}
+
+.message{
+margin-bottom:20px;
+max-width:700px;
+}
+
+.user{
+text-align:right;
+margin-left:auto;
+}
+
+.bot{
+background:#1e293b;
+padding:14px;
+border-radius:10px;
+}
+
+/* INPUT */
+
+.input-box{
+display:flex;
+padding:15px;
+border-top:1px solid #1e293b;
+}
+
+.input-box input{
+flex:1;
+padding:12px;
+border:none;
+border-radius:10px;
+background:#1e293b;
+color:white;
+}
+
+.send{
+margin-left:10px;
+padding:12px 20px;
+background:#6366f1;
+border:none;
+border-radius:10px;
+cursor:pointer;
+}
+
+/* VISUALIZATION */
+
+.visual{
+height:220px;
+background:#020617;
+border-top:1px solid #1e293b;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+canvas{
+width:90%;
+height:200px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<div class="logo">📚 AI Research</div>
+
+<input class="search" placeholder="Search papers..." oninput="searchPaper(this.value)">
+
+<div class="paper-list" id="papers"></div>
+
+</div>
+
+
+<div class="main">
+
+<div class="header">
+
+<div>ArXiv Expert Chatbot</div>
+
+<div class="mode" onclick="toggleMode()">Research Mode</div>
+
+</div>
+
+
+<div class="chat" id="chat"></div>
+
+
+<div class="input-box">
+
+<input id="msg" placeholder="Ask about machine learning, transformers, etc">
+
+<button class="send" onclick="send()">Send</button>
+
+</div>
+
+
+<div class="visual">
+<canvas id="graph"></canvas>
+</div>
+
+</div>
+
+<script>
+
+/* -------------------- DATASET SIMULATION -------------------- */
+
+const papers=[
+{
+title:"Attention Is All You Need",
+summary:"Transformer architecture replacing RNN with attention mechanism."
+},
+{
+title:"BERT: Pre-training of Deep Bidirectional Transformers",
+summary:"Language model enabling contextual embeddings."
+},
+{
+title:"GAN: Generative Adversarial Networks",
+summary:"Framework with generator and discriminator networks."
+},
+{
+title:"Diffusion Models",
+summary:"State of the art generative image modeling."
+}
+]
+
+/* -------------------- LOAD PAPERS -------------------- */
+
+function loadPapers(list){
+
+let container=document.getElementById("papers")
+container.innerHTML=""
+
+list.forEach(p=>{
+
+let div=document.createElement("div")
+div.className="paper"
+div.innerHTML="<b>"+p.title+"</b><br>"+p.summary
+
+div.onclick=()=>summarizePaper(p)
+
+container.appendChild(div)
+
+})
+
+}
+
+loadPapers(papers)
+
+/* -------------------- SEARCH -------------------- */
+
+function searchPaper(q){
+
+let res=papers.filter(p=>p.title.toLowerCase().includes(q.toLowerCase()))
+loadPapers(res)
+
+}
+
+/* -------------------- CHAT -------------------- */
+
+let history=[]
+
+function send(){
+
+let msg=document.getElementById("msg").value
+
+if(!msg)return
+
+addMessage(msg,"user")
+
+let response=generateAIResponse(msg)
+
+setTimeout(()=>{
+addMessage(response,"bot")
+drawGraph(msg)
+},500)
+
+document.getElementById("msg").value=""
+
+}
+
+/* -------------------- ADD MESSAGE -------------------- */
+
+function addMessage(text,type){
+
+let div=document.createElement("div")
+div.className="message "+type
+
+if(type==="bot")
+div.innerHTML='<div class="bot">'+text+'</div>'
+else
+div.innerHTML=text
+
+document.getElementById("chat").appendChild(div)
+
+}
+
+/* -------------------- AI RESPONSE ENGINE -------------------- */
+
+function generateAIResponse(q){
+
+q=q.toLowerCase()
+
+if(q.includes("transformer"))
+return "Transformers use self-attention mechanisms allowing models to capture global dependencies in sequences."
+
+if(q.includes("bert"))
+return "BERT is a bidirectional transformer model pre-trained using masked language modeling and next sentence prediction."
+
+if(q.includes("gan"))
+return "GANs involve two networks: a generator creating samples and a discriminator distinguishing real vs fake."
+
+if(q.includes("diffusion"))
+return "Diffusion models generate data by reversing a gradual noise process."
+
+return "This topic relates to modern AI research. For deeper explanation the system would retrieve relevant arXiv papers and generate explanations using an LLM."
+
+}
+
+/* -------------------- PAPER SUMMARY -------------------- */
+
+function summarizePaper(p){
+
+addMessage("Summarize paper: "+p.title,"user")
+
+let text="Paper: <b>"+p.title+"</b><br><br>"+p.summary+"<br><br>Explanation: This research introduced foundational ideas that influenced modern AI systems."
+
+setTimeout(()=>addMessage(text,"bot"),500)
+
+}
+
+/* -------------------- CONCEPT GRAPH -------------------- */
+
+function drawGraph(topic){
+
+let canvas=document.getElementById("graph")
+let ctx=canvas.getContext("2d")
+
+canvas.width=900
+canvas.height=200
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+let nodes=["AI","Transformer","Attention","Embedding","Training"]
+
+nodes.forEach((n,i)=>{
+
+let x=100+i*150
+let y=100
+
+ctx.beginPath()
+ctx.arc(x,y,25,0,Math.PI*2)
+ctx.fillStyle="#6366f1"
+ctx.fill()
+
+ctx.fillStyle="white"
+ctx.fillText(n,x-15,y+5)
+
+})
+
+}
+
+/* -------------------- MODE -------------------- */
+
+let research=true
+
+function toggleMode(){
+
+research=!research
+
+document.querySelector(".mode").innerText=
+research?"Research Mode":"Chat Mode"
+
+}
+
+</script>
+
+</body>
+</html>
